@@ -1,16 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 
 namespace SimpleDistr
@@ -18,18 +12,20 @@ namespace SimpleDistr
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow
     {
-        private int _numberOfModes;
-        private List<int> _levels = new List<int>();
+        //private int _numberOfModes;
+        private readonly List<int> _levels = new List<int>();
+/*
         private int _numberOfBindings;
+*/
 
         private const int WidthOfUnit = 30;
         private const int WidthBetweenUnits = 60;
         private const int HeightBetweenUnits = 70;
 
-        private List<Unit> allUnits = new List<Unit>();
-        private List<Binding> allBindings = new List<Binding>();
+        private readonly List<Unit> _allUnits = new List<Unit>();
+        private readonly List<Binding> _allBindings = new List<Binding>();
 
 
         public MainWindow()
@@ -165,11 +161,11 @@ namespace SimpleDistr
             var level = Convert.ToUInt16(textBoxTaskLevel.Text);
             var taskCompl = Convert.ToInt16(textBoxTaskComplexity.Text);
 
-            if (allUnits.Find(u => u.Index == index) != null)
+            if (_allUnits.Find(u => u.Index == index) != null)
                 return;
-            if (index != 0 && allUnits.Find(u => u.Index == index - 1) == null)
+            if (index != 0 && _allUnits.Find(u => u.Index == index - 1) == null)
                 return;
-            if (level != 0 && allUnits.Find(u => u.Level == level - 1) == null)
+            if (level != 0 && _allUnits.Find(u => u.Level == level - 1) == null)
                 return;
 
             if (_levels.Count == level)
@@ -178,34 +174,34 @@ namespace SimpleDistr
             var marginTop = level * HeightBetweenUnits + 20;
             var marginLeft = _levels[level] * WidthBetweenUnits + 20;
 
-            allUnits.Add(PutEllipse(new Point(marginLeft, marginTop), index, taskCompl, level));
+            _allUnits.Add(PutEllipse(new Point(marginLeft, marginTop), index, taskCompl, level));
 
             _levels[level]++;
-            _numberOfModes++;
+            //_numberOfModes++;
             textBoxTaskIndex.Text = (++index).ToString();
         }
 
         private void buttonBindNodes_Click(object sender, RoutedEventArgs e)
         {
-            var index = allBindings.Count;
+            var index = _allBindings.Count;
             var delay = Convert.ToUInt16(textBoxBindDelay.Text);
             var u1Id = Convert.ToUInt16(textBoxBindFrom.Text);
             var u2Id = Convert.ToUInt16(textBoxBindTo.Text);
 
-            var unit1 = allUnits.Find(u => u.Index == u1Id);
-            var unit2 = allUnits.Find(u => u.Index == u2Id);
+            var unit1 = _allUnits.Find(u => u.Index == u1Id);
+            var unit2 = _allUnits.Find(u => u.Index == u2Id);
 
             if (unit1 == null || unit2 == null || unit1.Level >= unit2.Level)
                 return;
-            var binding = allBindings.Find(b => b.Units.Contains(u1Id) && b.Units.Contains(u2Id));
+            var binding = _allBindings.Find(b => b.Units.Contains(u1Id) && b.Units.Contains(u2Id));
             if (binding != null)
             {
                 textBoxBindDelay.Text = binding.Delay.ToString();
                 return;
             }
 
-            allBindings.Add(CreateBinding(unit1, unit2, delay, index));
-            unit1.Binds.Add(allBindings.Last().Index);
+            _allBindings.Add(CreateBinding(unit1, unit2, delay, index));
+            unit1.Binds.Add(_allBindings.Last().Index);
         }
 
         private void buttonTableCreate_Click(object sender, RoutedEventArgs e)
@@ -214,7 +210,7 @@ namespace SimpleDistr
             if (proc < 1)
                 return;
 
-            var table = new Table(allUnits, allBindings, proc);
+            var table = new Table(_allUnits, _allBindings, proc);
             table.Show();
         }
 
