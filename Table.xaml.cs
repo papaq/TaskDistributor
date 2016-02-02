@@ -85,27 +85,51 @@ namespace SimpleDistr
                         if (_processors[procId].QueueList.Contains(unit)) continue;
                         if (startTimeOnEachProc[procId] <= minimumStartTimeOnOther)
                             startTimeOnEachProc[procId] = minimumStartTimeOnOther;
+
+                        // Maybe load instead of another task
+                        for (var time = _processors[procId].QueueList.Count - 1;
+                            time > 0
+                            && _processors[procId].QueueList[time].FinishTime - _processors[procId].QueueList[time].Complexity > minimumStartTimeOnOther;
+                            time--)
+                        {
+                            if (minimumStartTimeOnOther < _processors[procId].QueueList[time - 1].FinishTime)
+                            {
+                                startTimeOnEachProc[procId] = _processors[procId].QueueList[time - 1].FinishTime + 1;
+                            }
+                            // _allUnitsOrdered.Insert(0, _processors[]);
+                        }
                     }
                 }
 
                 // Find best variant (processor index)
                 var minimumTimeStartIs = 0;
                 for (var proc = 0; proc < startTimeOnEachProc.Length; proc++)
-                    if (startTimeOnEachProc[proc] <= startTimeOnEachProc[minimumTimeStartIs])
+                    if (startTimeOnEachProc[proc] < startTimeOnEachProc[minimumTimeStartIs])
                         minimumTimeStartIs = proc;
+
+                // Delete reserved process from the processor, where applicant starts earlier
+                for (var time = _processors[minimumTimeStartIs].QueueList.Count - 1;
+                    time > 0
+                    &&
+                    _processors[minimumTimeStartIs].QueueList[time].FinishTime > startTimeOnEachProc[minimumTimeStartIs];
+                    time--)
+                {
+                    _allUnitsOrdered.Insert(0, _processors[minimumTimeStartIs].QueueList.Last());
+                    _processors[minimumTimeStartIs].QueueList.RemoveAt(_processors[minimumTimeStartIs].QueueList.Count-1);
+                }
 
                 // Load this processor
                 _processors[minimumTimeStartIs].QueueList.Add(applicant);
                 _processors[minimumTimeStartIs].LeftTime = startTimeOnEachProc[minimumTimeStartIs] + applicant.Complexity;
                 applicant.FinishTime = _processors[minimumTimeStartIs].LeftTime;
             }
-            
+
         }
 
         private void FillTable()
         {
             var allTicks = new List<ProcTable>();
-            var maxFinishTime = _processors.Select(t => t.LeftTime).Concat(new[] {0}).Max();
+            var maxFinishTime = _processors.Select(t => t.LeftTime).Concat(new[] { 0 }).Max();
 
             for (var i = 0; i < maxFinishTime; i++)
             {
@@ -151,6 +175,6 @@ namespace SimpleDistr
             ListViewTable.ItemsSource = allTicks;
 
         }
-        
+
     }
 }
